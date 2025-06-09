@@ -2,6 +2,8 @@ import axios from 'axios';
 import { authService } from './authService';
 
 export const API_URL = "https://localhost:8000/api";
+// export const API_URL = "https://gestion-entreprise.devanmol.tech/api";
+
 
 const api = axios.create({
   baseURL: API_URL,

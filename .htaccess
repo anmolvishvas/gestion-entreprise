@@ -1,0 +1,15 @@
+# Enable Rewrite Engine
+RewriteEngine On
+
+# Redirect /api requests to Symfony backend
+RewriteCond %{REQUEST_URI} ^/api
+RewriteCond %{DOCUMENT_ROOT}/api/public/index.php -f
+RewriteRule ^api/(.*)$ /api/public/index.php [L]
+
+# Serve frontend correctly
+DirectoryIndex index.html index.php
+
+# Ensure static files are accessible
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.html [L]
