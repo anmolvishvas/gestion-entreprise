@@ -223,13 +223,11 @@ export default function StockMovements() {
               }}
             >
               <option value="all">Tous les articles</option>
-              {stockItems
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(item => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.name} ({item.location})
-                  </option>
-                ))}
+              {stockItems.map(item => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </select>
           </div>
           
@@ -248,10 +246,11 @@ export default function StockMovements() {
               }}
             >
               <option value="all">Tous les emplacements</option>
-              <option value="Cotona">Cotona</option>
-              <option value="Maison">Maison</option>
-              <option value="Avishay">Avishay</option>
-              <option value="Avenir">Avenir</option>
+              {locationOptions.map(location => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -293,10 +292,10 @@ export default function StockMovements() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-600">Total mouvements</p>
-              <p className="text-2xl font-semibold">{filteredMovements.length}</p>
+              <p className="text-xl sm:text-2xl font-semibold">{filteredMovements.length}</p>
             </div>
             <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-              <Calendar className="h-6 w-6" />
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
           </div>
         </div>
@@ -305,10 +304,10 @@ export default function StockMovements() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-600">Total entrées</p>
-              <p className="text-2xl font-semibold">{totalEntries}</p>
+              <p className="text-xl sm:text-2xl font-semibold">{totalEntries}</p>
             </div>
             <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <ArrowDown className="h-6 w-6" />
+              <ArrowDown className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
           </div>
         </div>
@@ -317,10 +316,10 @@ export default function StockMovements() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-600">Total sorties</p>
-              <p className="text-2xl font-semibold">{totalExits}</p>
+              <p className="text-xl sm:text-2xl font-semibold">{totalExits}</p>
             </div>
             <div className="p-3 rounded-full bg-red-100 text-red-600">
-              <ArrowUp className="h-6 w-6" />
+              <ArrowUp className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
           </div>
         </div>
@@ -328,7 +327,49 @@ export default function StockMovements() {
       
       {/* Movements table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile view */}
+        <div className="md:hidden">
+          {paginatedMovements.map((movement) => {
+            const item = getCompleteStockItem(movement.stockItem);
+            return (
+              <div key={movement.id} className="p-4 border-b border-gray-200">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{item?.name || 'Article inconnu'}</h3>
+                    <p className="text-sm text-gray-600">{item?.location || 'Emplacement inconnu'}</p>
+                  </div>
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    movement.type === 'entree' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {movement.type === 'entree' ? 'Entrée' : 'Sortie'}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Date:</span>
+                    <span className="ml-1 text-gray-900">{new Date(movement.date).toLocaleDateString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Quantité:</span>
+                    <span className={`ml-1 font-medium ${
+                      movement.type === 'entree' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {movement.type === 'entree' ? '+' : '-'}{movement.quantity}
+                    </span>
+                  </div>
+                  {movement.notes && (
+                    <div className="col-span-2">
+                      <span className="text-gray-500">Notes:</span>
+                      <span className="ml-1 text-gray-900">{movement.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Desktop view */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -353,44 +394,39 @@ export default function StockMovements() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedMovements.map((movement) => (
-                <tr key={movement.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {formatDate(movement.date)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {getItemName(movement)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {getLocationName(movement)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      movement.type === 'entree'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {movement.type === 'entree' ? 'Entrée' : 'Sortie'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
-                    <span className={movement.type === 'entree' ? 'text-green-600' : 'text-red-600'}>
-                      {movement.type === 'entree' ? '+' : '-'}{movement.quantity}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                    {movement.notes}
-                  </td>
-                </tr>
-              ))}
-              
-              {paginatedMovements.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                    Aucun mouvement trouvé pour cette période
-                  </td>
-                </tr>
-              )}
+              {paginatedMovements.map((movement) => {
+                const item = getCompleteStockItem(movement.stockItem);
+                return (
+                  <tr key={movement.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(movement.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item?.name || 'Article inconnu'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {item?.location || 'Emplacement inconnu'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        movement.type === 'entree' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {movement.type === 'entree' ? 'Entrée' : 'Sortie'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      <span className={`font-medium ${
+                        movement.type === 'entree' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {movement.type === 'entree' ? '+' : '-'}{movement.quantity}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {movement.notes}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -398,41 +434,44 @@ export default function StockMovements() {
       
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-4 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredMovements.length)} sur {filteredMovements.length} mouvements
-          </div>
-          <div className="flex space-x-1">
-            <button 
-              className="btn-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+        <div className="mt-4 flex justify-center">
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                currentPage === 1
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-500 hover:bg-gray-50'
+              }`}
             >
               Précédent
             </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
-                className={`btn-sm ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
                 onClick={() => setCurrentPage(page)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  currentPage === page
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                }`}
               >
                 {page}
               </button>
             ))}
-            
-            <button 
-              className="btn-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
+              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                currentPage === totalPages
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-500 hover:bg-gray-50'
+              }`}
             >
               Suivant
             </button>
-          </div>
+          </nav>
         </div>
       )}
       

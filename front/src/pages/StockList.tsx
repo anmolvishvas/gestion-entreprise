@@ -304,7 +304,44 @@ export default function StockList() {
       
       {/* Stock Items Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile view */}
+        <div className="md:hidden">
+          {paginatedItems.map((item) => (
+            <div key={item.id} className="p-4 border-b border-gray-200">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-medium text-gray-900">{item.name}</h3>
+                  <p className="text-sm text-gray-600">{typeof item.type === 'object' ? item.type.name : ''}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  (item.stockRestant || item.stockInitial) <= 10
+                    ? 'bg-red-100 text-red-800'
+                    : (item.stockRestant || item.stockInitial) <= 30
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {(item.stockRestant || item.stockInitial) <= 10
+                    ? 'Critique'
+                    : (item.stockRestant || item.stockInitial) <= 30
+                    ? 'Bas'
+                    : 'Normal'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Emplacement:</span>
+                  <span className="ml-1 text-gray-900">{getLocationName(item.location)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Quantité:</span>
+                  <span className="ml-1 text-gray-900">{item.stockRestant || item.stockInitial} {item.unit}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop view */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
