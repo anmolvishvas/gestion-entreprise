@@ -10,9 +10,26 @@ export interface StockMovement {
     notes?: string;
 }
 
-export interface CreateStockMovementDTO {
+export interface ColorStockMovement {
+    id: number;
+    colorStock: string;
     date: string;
-    stockItem: string; // IRI string for stockItem
+    type: 'entree' | 'sortie';
+    quantity: number;
+    notes?: string;
+}
+
+export interface CreateStockMovementDTO {
+    stockItem: StockItem | string; // Can be either the full object or an IRI string
+    date: string;
+    type: 'entree' | 'sortie';
+    quantity: number;
+    notes?: string;
+}
+
+export interface CreateColorStockMovementDTO {
+    colorStock: string;
+    date: string;
     type: 'entree' | 'sortie';
     quantity: number;
     notes?: string;
@@ -71,5 +88,24 @@ export const stockMovementService = {
             `${API_URL}/stock_movements?type=${type}`
         );
         return response.data.member;
-    }
+    },
+
+    async createColorMovement(movement: CreateColorStockMovementDTO): Promise<ColorStockMovement> {
+        const response = await api.post('/color_stock_movements', movement);
+        return response.data;
+    },
+
+    async updateColorMovement(id: string, movement: Partial<CreateColorStockMovementDTO>): Promise<ColorStockMovement> {
+        const response = await api.put(`/color_stock_movements/${id}`, movement);
+        return response.data;
+    },
+
+    async deleteColorMovement(id: string): Promise<void> {
+        await api.delete(`/color_stock_movements/${id}`);
+    },
+
+    async getColorMovementsByType(type: 'entree' | 'sortie'): Promise<ColorStockMovement[]> {
+        const response = await api.get(`/color_stock_movements?type=${type}`);
+        return response.data['hydra:member'];
+    },
 }; 

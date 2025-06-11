@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Users, Package, DollarSign, ArrowDown, ArrowUp, List, Settings, LayoutDashboard, Clock, Menu, X } from 'lucide-react';
+import { Users, Package, DollarSign, ArrowDown, ArrowUp, List, Settings, LayoutDashboard, Clock, Menu, X, LogOut } from 'lucide-react';
 import { authService } from '../services/authService';
 import { useState } from 'react';
 
@@ -48,103 +48,140 @@ export default function Layout() {
             </div>
 
             {/* Desktop menu */}
-            <div className="hidden lg:flex lg:items-center lg:space-x-8">
-              <div className="flex items-center space-x-8">
-                <Link
-                  to="/fournisseurs"
-                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                    isActive('/fournisseurs') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Users className="h-5 w-5 mr-1" />
-                  Fournisseurs
-                </Link>
+            <div className="hidden lg:flex lg:items-center lg:flex-1">
+              <nav className="flex-1">
+                <ul className="flex items-center space-x-2">
+                <li>
+                    <Link
+                      to="/dashboard"
+                      className={`group inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                        isActive('/dashboard') 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <LayoutDashboard className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                        isActive('/dashboard') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      Dashboard
+                    </Link>
+                  </li>
 
-                {/* Menu déroulant Stock */}
-                <div className="relative group">
-                  <Link
-                    to="/stock"
-                    className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                      isActive('/stock') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <Package className="h-5 w-5 mr-1" />
-                    Stock
-                  </Link>
-                  <div className="absolute hidden group-hover:block w-48 bg-white border rounded-md shadow-lg py-1 z-50">
+                  <li>
                     <Link
-                      to="/stock/entree"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      to="/fournisseurs"
+                      className={`group inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                        isActive('/fournisseurs') 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
-                      <ArrowDown className="h-4 w-4 inline mr-2" />
-                      Entrée Stock
+                      <Users className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                        isActive('/fournisseurs') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      Fournisseurs
                     </Link>
-                    <Link
-                      to="/stock/sortie"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <ArrowUp className="h-4 w-4 inline mr-2" />
-                      Sortie Stock
-                    </Link>
-                    <Link
-                      to="/stock/liste"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <List className="h-4 w-4 inline mr-2" />
-                      Liste Stock
-                    </Link>
-                    <Link
-                      to="/stock/movements"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Clock className="h-4 w-4 inline mr-2" />
-                      Mouvements
-                    </Link>
-                    <Link
-                      to="/stock/types"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Settings className="h-4 w-4 inline mr-2" />
-                      Types d'Articles
-                    </Link>
-                  </div>
-                </div>
+                  </li>
 
-                <Link
-                  to="/dashboard"
-                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                    isActive('/dashboard') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <LayoutDashboard className="h-5 w-5 mr-1" />
-                  Dashboard
-                </Link>
+                  <li className="relative">
+                    <div className="group">
+                      <Link
+                        to="/stock"
+                        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                          isActive('/stock') 
+                            ? 'bg-blue-50 text-blue-700' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Package className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                          isActive('/stock') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                        }`} />
+                        Stock
+                        <svg className="ml-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </Link>
+                      <div className="absolute left-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 transform">
+                        <div className="py-1 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                          <Link
+                            to="/stock/entree"
+                            className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <ArrowDown className="mr-3 h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                            Entrée Stock
+                          </Link>
+                          <Link
+                            to="/stock/sortie"
+                            className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <ArrowUp className="mr-3 h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                            Sortie Stock
+                          </Link>
+                          <Link
+                            to="/stock/liste"
+                            className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <List className="mr-3 h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                            Liste Stock
+                          </Link>
+                          <Link
+                            to="/stock/movements"
+                            className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <Clock className="mr-3 h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                            Mouvements
+                          </Link>
+                          <Link
+                            to="/stock/types"
+                            className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <Settings className="mr-3 h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                            Types d'Articles
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
 
-                <Link
-                  to="/inventaire"
-                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                    isActive('/inventaire') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Package className="h-5 w-5 mr-1" />
-                  Inventaire
-                </Link>
+                  <li>
+                    <Link
+                      to="/inventaire"
+                      className={`group inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                        isActive('/inventaire') 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Package className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                        isActive('/inventaire') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      Inventaire
+                    </Link>
+                  </li>
 
-                <Link
-                  to="/comptabilite"
-                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                    isActive('/comptabilite') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <DollarSign className="h-5 w-5 mr-1" />
-                  Comptabilité
-                </Link>
-              </div>
+                  <li>
+                    <Link
+                      to="/comptabilite"
+                      className={`group inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                        isActive('/comptabilite') 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <DollarSign className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                        isActive('/comptabilite') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      Comptabilité
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
 
               <button
                 onClick={handleLogout}
-                className="ml-8 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150"
               >
+                <LogOut className="h-5 w-5 mr-2" />
                 Déconnexion
               </button>
             </div>

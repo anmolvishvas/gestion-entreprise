@@ -10,7 +10,7 @@ use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 
 #[ORM\Entity]
 #[ApiResource(
@@ -21,45 +21,46 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Put(),
         new Delete(),
     ],
-    normalizationContext: ['groups' => ['stock_movement:read']],
-    denormalizationContext: ['groups' => ['stock_movement:write']]
+    normalizationContext: [
+        'groups' => ['color_movement:read', 'stock_item:read'],
+        'enable_max_depth' => true
+    ],
+    denormalizationContext: ['groups' => ['color_movement:write']]
 )]
-class StockMovement
+class ColorStockMovement
 {
-    public const TYPES = ['entree', 'sortie'];
-    public const MOVEMENT_TYPE = 'stock';
+    public const MOVEMENT_TYPE = 'color';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['stock_movement:read', 'stock_item:read'])]
+    #[Groups(['color_movement:read'])]
     private ?int $id = null;
-
-    #[ORM\Column(type: 'datetime')]
-    #[Groups(['stock_movement:read', 'stock_movement:write', 'stock_item:read'])]
-    private ?\DateTimeInterface $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'movements')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['stock_movement:read', 'stock_movement:write'])]
-    private ?StockItem $stockItem = null;
+    #[Groups(['color_movement:read', 'color_movement:write', 'stock_item:read'])]
+    #[MaxDepth(2)]
+    private ?ColorStock $colorStock = null;
+
+    #[ORM\Column(type: 'datetime')]
+    #[Groups(['color_movement:read', 'color_movement:write'])]
+    private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(length: 10)]
-    #[Assert\Choice(choices: self::TYPES)]
-    #[Groups(['stock_movement:read', 'stock_movement:write', 'stock_item:read'])]
+    #[Groups(['color_movement:read', 'color_movement:write'])]
     private ?string $type = null;
 
     #[ORM\Column]
-    #[Assert\Positive]
-    #[Groups(['stock_movement:read', 'stock_movement:write', 'stock_item:read'])]
+    #[Groups(['color_movement:read', 'color_movement:write'])]
     private ?int $quantity = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups(['stock_movement:read', 'stock_movement:write', 'stock_item:read'])]
+    #[Groups(['color_movement:read', 'color_movement:write'])]
     private ?string $notes = null;
 
     #[ORM\Column(type: 'string', length: 20)]
-    #[Groups(['stock_movement:read'])]
+    #[Groups(['color_movement:read'])]
     private string $movementType = self::MOVEMENT_TYPE;
 
     public function __construct()
@@ -70,6 +71,17 @@ class StockMovement
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getColorStock(): ?ColorStock
+    {
+        return $this->colorStock;
+    }
+
+    public function setColorStock(?ColorStock $colorStock): self
+    {
+        $this->colorStock = $colorStock;
+        return $this;
     }
 
     public function getDate(): ?\DateTimeInterface
@@ -83,17 +95,6 @@ class StockMovement
         return $this;
     }
 
-    public function getStockItem(): ?StockItem
-    {
-        return $this->stockItem;
-    }
-
-    public function setStockItem(?StockItem $stockItem): self
-    {
-        $this->stockItem = $stockItem;
-        return $this;
-    }
-
     public function getType(): ?string
     {
         return $this->type;
@@ -101,8 +102,8 @@ class StockMovement
 
     public function setType(string $type): self
     {
-        if (!in_array($type, self::TYPES)) {
-            throw new \InvalidArgumentException('Invalid movement type');
+        if (!in_array($type, ['entree', 'sortie'])) {
+            throw new \InvalidArgumentException('Invalid type');
         }
         $this->type = $type;
         return $this;
@@ -139,5 +140,10 @@ class StockMovement
     {
         $this->movementType = $movementType;
         return $this;
+    }
+
+    public function getStockItem(): ?StockItem
+    {
+        return $this->colorStock?->getStockItem();
     }
 } 

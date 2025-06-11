@@ -12,7 +12,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use App\Controller\CreateColorStockController;
 
 #[ORM\Entity]
 #[ApiResource(
@@ -22,15 +24,22 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
         new Post(),
         new Put(),
         new Delete(),
+        new Post(
+            uriTemplate: '/stock_items/{id}/color-stocks',
+            controller: CreateColorStockController::class,
+        ),
     ],
-    normalizationContext: ['groups' => ['stock_item:read']],
+    normalizationContext: [
+        'groups' => ['stock_item:read'],
+        'enable_max_depth' => true
+    ],
     denormalizationContext: ['groups' => ['stock_item:write']]
 )]
 #[UniqueEntity('reference')]
 class StockItem
 {
     public const LOCATIONS = ['Cotona', 'Maison', 'Avishay', 'Avenir'];
-    public const UNITS = ['piece', 'unite'];
+    public const UNITS = ['piece', 'carton', 'bal'];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -49,10 +58,11 @@ class StockItem
     #[ORM\ManyToOne(inversedBy: 'stockItems')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['stock_item:read', 'stock_item:write'])]
+    #[MaxDepth(1)]
     private ?ItemType $type = null;
 
     #[ORM\Column(length: 20)]
-    #[Groups(['stock_item:read', 'stock_item:write'])]
+    #[Groups(['stock_item:read', 'stock_item:write', 'stock_movement:read'])]
     private ?string $location = null;
 
     #[ORM\Column(length: 10)]
@@ -69,11 +79,22 @@ class StockItem
 
     #[ORM\OneToMany(mappedBy: 'stockItem', targetEntity: StockMovement::class)]
     #[Groups(['stock_item:read'])]
+    #[MaxDepth(1)]
     private Collection $movements;
+
+    #[ORM\Column(type: 'boolean')]
+    #[Groups(['stock_item:read', 'stock_item:write'])]
+    private bool $hasColors = false;
+
+    #[ORM\OneToMany(mappedBy: 'stockItem', targetEntity: ColorStock::class, cascade: ['persist', 'remove'])]
+    #[Groups(['stock_item:read', 'stock_item:write'])]
+    #[MaxDepth(1)]
+    private Collection $colorStocks;
 
     public function __construct()
     {
         $this->movements = new ArrayCollection();
+        $this->colorStocks = new ArrayCollection();
         $this->dateDernierInventaire = new \DateTime();
     }
 
@@ -165,9 +186,53 @@ class StockItem
         return $this;
     }
 
+    public function getHasColors(): bool
+    {
+        return $this->hasColors;
+    }
+
+    public function setHasColors(bool $hasColors): self
+    {
+        $this->hasColors = $hasColors;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ColorStock>
+     */
+    public function getColorStocks(): Collection
+    {
+        return $this->colorStocks;
+    }
+
+    public function addColorStock(ColorStock $colorStock): self
+    {
+        if (!$this->colorStocks->contains($colorStock)) {
+            $this->colorStocks->add($colorStock);
+            $colorStock->setStockItem($this);
+        }
+        return $this;
+    }
+
+    public function removeColorStock(ColorStock $colorStock): self
+    {
+        if ($this->colorStocks->removeElement($colorStock)) {
+            if ($colorStock->getStockItem() === $this) {
+                $colorStock->setStockItem(null);
+            }
+        }
+        return $this;
+    }
+
     #[Groups(['stock_item:read'])]
     public function getStockRestant(): int
     {
+        if ($this->hasColors) {
+            return $this->colorStocks->reduce(function ($total, ColorStock $colorStock) {
+                return $total + $colorStock->getStockRestant();
+            }, 0);
+        }
+
         $nbEntrees = 0;
         $nbSorties = 0;
 

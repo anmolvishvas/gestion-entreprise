@@ -4,6 +4,7 @@ import { transactionService } from '../services/transactionService';
 import { itemTypeService, type ItemType } from '../services/itemTypeService';
 import { stockItemService, type StockItem, type CreateStockItemDTO } from '../services/stockItemService';
 import { stockMovementService, type StockMovement, type CreateStockMovementDTO } from '../services/stockMovementService';
+import { colorStockMovementService, type ColorStockMovement } from '../services/colorStockMovementService';
 
 export type Transaction = {
   id: string;
@@ -43,6 +44,7 @@ type AppContextType = {
   itemTypes: ItemType[];
   stockItems: StockItem[];
   stockMovements: StockMovement[];
+  colorStockMovements: ColorStockMovement[];
   addFournisseur: (fournisseur: Omit<Fournisseur, 'id'>) => Promise<void>;
   updateFournisseur: (id: string, fournisseur: Partial<Fournisseur>) => Promise<void>;
   deleteFournisseur: (id: string) => Promise<void>;
@@ -61,6 +63,8 @@ type AppContextType = {
   addStockMovement: (movement: CreateStockMovementDTO) => Promise<void>;
   updateStockMovement: (id: string, movement: Partial<StockMovement>) => Promise<void>;
   deleteStockMovement: (id: string) => Promise<void>;
+  // Color Stock Movements
+  addColorStockMovement: (data: Omit<ColorStockMovement, 'id' | 'movementType'>) => Promise<void>;
   // Refresh functions
   refreshStockData: () => Promise<void>;
   isLoading: boolean;
@@ -75,6 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [colorStockMovements, setColorStockMovements] = useState<ColorStockMovement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,19 +94,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
           transactionsData,
           itemTypesData,
           stockItemsData,
-          stockMovementsData
+          stockMovementsData,
+          colorStockMovementsData
         ] = await Promise.all([
           fournisseurService.getAll(),
           transactionService.getAll(),
           itemTypeService.getAll(),
           stockItemService.getAll(),
-          stockMovementService.getAll()
+          stockMovementService.getAll(),
+          colorStockMovementService.getAll()
         ]);
         setFournisseurs(fournisseursData);
         setTransactions(transactionsData);
         setItemTypes(itemTypesData);
         setStockItems(stockItemsData);
         setStockMovements(stockMovementsData);
+        setColorStockMovements(colorStockMovementsData);
       } catch (err) {
         setError('Erreur lors du chargement des données');
         console.error('Error loading data:', err);
@@ -247,12 +255,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const [stockItemsData, stockMovementsData] = await Promise.all([
+      const [items, movements, colorMovements] = await Promise.all([
         stockItemService.getAll(),
-        stockMovementService.getAll()
+        stockMovementService.getAll(),
+        colorStockMovementService.getAll()
       ]);
-      setStockItems(stockItemsData);
-      setStockMovements(stockMovementsData);
+      setStockItems(items);
+      setStockMovements(movements);
+      setColorStockMovements(colorMovements);
     } catch (err) {
       setError('Erreur lors du rafraîchissement des données');
       console.error('Error refreshing stock data:', err);
@@ -374,12 +384,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Color Stock Movements methods
+  const addColorStockMovement = async (data: Omit<ColorStockMovement, 'id' | 'movementType'>) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await colorStockMovementService.create(data);
+      await refreshStockData(); // Refresh after adding color stock movement
+    } catch (err) {
+      setError('Erreur lors de l\'ajout du mouvement de couleur');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     fournisseurs,
     transactions,
     itemTypes,
     stockItems,
     stockMovements,
+    colorStockMovements,
     addFournisseur,
     updateFournisseur,
     deleteFournisseur,
@@ -395,6 +421,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addStockMovement,
     updateStockMovement,
     deleteStockMovement,
+    addColorStockMovement,
     refreshStockData,
     isLoading,
     error

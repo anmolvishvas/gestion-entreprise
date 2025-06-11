@@ -1,13 +1,31 @@
 import api, { API_URL } from "./api";
 import type { ItemType } from "./itemTypeService";
 
+export interface ColorStockMovement {
+    id: number;
+    type: 'entree' | 'sortie';
+    quantity: number;
+    date: string;
+    notes?: string;
+}
+
+export interface ColorStock {
+    id: number;
+    color: string;
+    stockInitial: number;
+    stockRestant: number;
+    nbEntrees: number;
+    nbSorties: number;
+    movements: ColorStockMovement[];
+}
+
 export interface StockItem {
     id: string;
     reference: string | null;
     name: string;
     type: ItemType | string; // Can be either the full type object or an IRI string
     location: "Cotona" | "Maison" | "Avishay" | "Avenir";
-    unit: "piece" | "unite";
+    unit: "piece" | "carton" | "bal";
     stockInitial: number;
     dateDernierInventaire: string;
     stockRestant?: number;
@@ -20,6 +38,8 @@ export interface StockItem {
         date: string;
         notes?: string;
     }>;
+    hasColors: boolean;
+    colorStocks?: ColorStock[];
 }
 
 export interface CreateStockItemDTO {
@@ -27,9 +47,15 @@ export interface CreateStockItemDTO {
     name: string;
     type: string; // IRI string for type
     location: "Cotona" | "Maison" | "Avishay" | "Avenir";
-    unit: "piece" | "unite";
+    unit: "piece" | "carton" | "bal";
     stockInitial: number;
     dateDernierInventaire: string;
+    hasColors: boolean;
+}
+
+export interface CreateColorStockDTO {
+    color: string;
+    stockInitial: number;
 }
 
 export interface ApiResponse {
@@ -72,7 +98,6 @@ export const stockItemService = {
     ): Promise<StockItem> => {
         // Get the current item first
         const currentItem = await stockItemService.getById(id);
-
         // Prepare the update data by merging current data with updates
         const updateData = {
             ...currentItem, // Start with all current data
@@ -133,5 +158,19 @@ export const stockItemService = {
 
     delete: async (id: string): Promise<void> => {
         await api.delete(`${API_URL}/stock_items/${id}`);
+    },
+
+    updateColorStock: async (itemId: string, colorStockId: number, colorStock: Partial<CreateColorStockDTO>): Promise<ColorStock> => {
+        const response = await api.put<ColorStock>(`${API_URL}/stock_items/${itemId}/color-stocks/${colorStockId}`, colorStock);
+        return response.data;
+    },
+
+    createColorStock: async (itemId: string, colorStock: CreateColorStockDTO): Promise<ColorStock> => {
+        const response = await api.post<ColorStock>(`${API_URL}/stock_items/${itemId}/color-stocks`, colorStock);
+        return response.data;
+    },
+
+    deleteColorStock: async (itemId: string, colorStockId: number): Promise<void> => {
+        await api.delete(`${API_URL}/stock_items/${itemId}/color-stocks/${colorStockId}`);
     },
 };
