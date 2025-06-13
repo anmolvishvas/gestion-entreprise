@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Users, Download, ChevronLeft, ChevronRight, TrendingUp, AlertCircle, X, Edit2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { EmbeddedTransaction } from '../context/AppContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Fournisseur {
   id?: string;
@@ -169,10 +171,20 @@ export default function Fournisseurs() {
     return { totalAchat, totalReste };
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Code', 'Nom', 'Total Achats (Ar)', 'Total Virements (Ar)', 'Reste à Payer (Ar)'];
-    const csvData = filteredFournisseurs.map(fournisseur => {
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // Orientation paysage
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text('Liste des Fournisseurs', 14, 22);
+    
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 14, 30);
+    
+    // Prepare table data
+    const tableData = filteredFournisseurs.map(fournisseur => {
       let totalAchat = 0;
       let totalVirement = 0;
       
@@ -186,23 +198,52 @@ export default function Fournisseurs() {
       return [
         fournisseur.code,
         fournisseur.nom,
-        totalAchat.toString(),
-        totalVirement.toString(),
-        totalReste.toString()
+        totalAchat.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+        totalVirement.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+        totalReste.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
       ];
     });
-    
-    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `liste-fournisseurs-${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    // Add table
+    autoTable(doc, {
+      startY: 35,
+      head: [['Code', 'Nom', 'Total Achats (Ar)', 'Total Virements (Ar)', 'Reste à Payer (Ar)']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: 255,
+        fontSize: 12,
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 5,
+        overflow: 'linebreak'
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 45, halign: 'right' },
+        3: { cellWidth: 45, halign: 'right' },
+        4: { cellWidth: 45, halign: 'right' }
+      },
+      margin: { top: 35 },
+      pageBreak: 'auto',
+      showFoot: 'lastPage',
+      didDrawPage: function(data) {
+        // Add page number
+        doc.setFontSize(10);
+        doc.text(
+          `Page ${data.pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Save the PDF
+    doc.save(`liste-fournisseurs-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   if (globalLoading || isSubmitting) {
@@ -268,11 +309,11 @@ export default function Fournisseurs() {
               </h2>
               <div className="flex items-center gap-4">
                   <button
-                    onClick={exportToCSV}
+                    onClick={exportToPDF}
                   className="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 transition-colors duration-200 font-medium text-sm"
                   >
                   <Download className="h-4 w-4 mr-2" />
-                    Exporter CSV
+                    Exporter PDF
                   </button>
                 </div>
               </div>

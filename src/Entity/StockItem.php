@@ -13,7 +13,6 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use App\Controller\CreateColorStockController;
 
 #[ORM\Entity]
@@ -35,7 +34,6 @@ use App\Controller\CreateColorStockController;
     ],
     denormalizationContext: ['groups' => ['stock_item:write']]
 )]
-#[UniqueEntity('reference')]
 class StockItem
 {
     public const LOCATIONS = ['Cotona', 'Maison', 'Avishay', 'Avenir'];

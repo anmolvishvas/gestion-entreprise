@@ -10,6 +10,8 @@ import type { StockMovement } from '../services/stockMovementService';
 import type { StockItem } from '../services/stockItemService';
 import { stockItemService } from '../services/stockItemService';
 import { colorStockMovementService, type ColorStockMovement } from '../services/colorStockMovementService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Type union pour représenter tous les types de mouvements
 type Movement = 
@@ -160,31 +162,87 @@ export default function StockMovements() {
     });
   };
   
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Date', 'Article', 'Emplacement', 'Type', 'Quantité', 'Notes'];
-    const csvData = sortedMovements.map(movement => {
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // Orientation paysage
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text('Mouvements de Stock', 14, 22);
+    
+    // Add date range
+    doc.setFontSize(12);
+    const dateRange = startDate && endDate 
+      ? `Période: ${new Date(startDate).toLocaleDateString('fr-FR')} - ${new Date(endDate).toLocaleDateString('fr-FR')}`
+      : `Date: ${new Date().toLocaleDateString('fr-FR')}`;
+    doc.text(dateRange, 14, 30);
+    
+    // Add summary statistics
+    doc.setFontSize(11);
+    doc.text(`Total Entrées: ${totalEntries}`, 14, 38);
+    doc.text(`Total Sorties: ${totalExits}`, 14, 42);
+    
+    // Prepare table data
+    const tableData = sortedMovements.map(movement => {
+      const item = movement.movementType === 'color' 
+        ? movement.colorStock.stockItem 
+        : getCompleteStockItem(movement.stockItem);
+      
       return [
         formatDate(movement.date),
         getItemName(movement),
         getLocationName(movement),
         movement.type === 'entree' ? 'Entrée' : 'Sortie',
-        movement.quantity.toString(),
-        movement.notes
+        movement.quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+        (movement.movementType === 'color' 
+          ? movement.colorStock.stockRestant 
+          : item?.stockRestant ?? 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+        movement.notes || '-'
       ];
     });
-    
-    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `mouvements-stock-${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    // Add main table
+    autoTable(doc, {
+      startY: 45,
+      head: [['Date', 'Article', 'Emplacement', 'Type', 'Quantité', 'Stock Restant', 'Notes']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: 255,
+        fontSize: 12,
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 5,
+        overflow: 'linebreak'
+      },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
+        6: { cellWidth: 40 }
+      },
+      margin: { top: 45 },
+      pageBreak: 'auto',
+      showFoot: 'lastPage',
+      didDrawPage: function(data) {
+        // Add page number
+        doc.setFontSize(10);
+        doc.text(
+          `Page ${data.pageNumber} sur ${data.pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Save the PDF
+    doc.save(`mouvements-stock-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
   
   return (
@@ -385,11 +443,11 @@ export default function StockMovements() {
             </button>
             
             <button
-              onClick={exportToCSV}
+              onClick={exportToPDF}
               className="inline-flex items-center px-4 py-2.5 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors duration-200"
             >
               <Download className="h-4 w-4 mr-2" />
-              Exporter CSV
+              Exporter PDF
             </button>
           </div>
         </div>

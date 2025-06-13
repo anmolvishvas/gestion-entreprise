@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Users, Package, DollarSign, ArrowDown, ArrowUp, List, Settings, LayoutDashboard, Clock, Menu, X, LogOut } from 'lucide-react';
+import { Users, Package, DollarSign, ArrowDown, ArrowUp, List, Settings, LayoutDashboard, Clock, Menu, X, LogOut, Tag } from 'lucide-react';
 import { authService } from '../services/authService';
 import { useState } from 'react';
 
@@ -174,6 +174,22 @@ export default function Layout() {
                       Comptabilité
                     </Link>
                   </li>
+
+                  <li>
+                    <Link
+                      to="/prix"
+                      className={`group inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                        isActive('/prix') 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Tag className={`h-5 w-5 mr-2 transition-colors duration-150 ${
+                        isActive('/prix') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      Prix
+                    </Link>
+                  </li>
                 </ul>
               </nav>
 
@@ -329,6 +345,19 @@ export default function Layout() {
                 >
                   <DollarSign className="h-5 w-5 inline mr-2" />
                   Comptabilité
+                </Link>
+
+                <Link
+                  to="/prix"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/prix')
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={toggleMobileMenu}
+                >
+                  <Tag className="h-5 w-5 inline mr-2" />
+                  Prix
                 </Link>
 
                 <button

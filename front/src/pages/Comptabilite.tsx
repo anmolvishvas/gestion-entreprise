@@ -3,6 +3,8 @@ import { Plus, FileText, Download, TrendingUp, TrendingDown, DollarSign } from '
 import { useAppContext } from '../context/AppContext';
 import { Transaction } from '../context/AppContext';
 import Modal from '../components/Modal';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface TransactionFormData {
   date: string;
@@ -299,34 +301,99 @@ export default function Comptabilite() {
   const totalVirement = transactions.reduce((sum, t) => sum + t.virement, 0);
   const totalReste = totalAchat - totalVirement;
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Date', 'Code Fournisseur', 'Nom Fournisseur', 'Achat (Ar)', 'Virement (Ar)', 'Reste (Ar)'];
-    const csvData = transactionsToDisplay.map(transaction => {
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // Orientation paysage
+    
+    // Calculer les totaux en fonction du filtre fournisseur
+    const filteredTransactions = selectedFournisseur 
+      ? transactions.filter(t => String(t.fournisseur.id) === selectedFournisseur)
+      : transactions;
+    
+    const totalAchatFiltered = filteredTransactions.reduce((sum, t) => sum + t.achat, 0);
+    const totalVirementFiltered = filteredTransactions.reduce((sum, t) => sum + t.virement, 0);
+    const totalResteFiltered = totalAchatFiltered - totalVirementFiltered;
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text('Transactions', 14, 22);
+    
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 14, 30);
+    
+    // Add summary statistics
+    doc.setFontSize(11);
+    doc.text(`Total Achats: ${totalAchatFiltered.toLocaleString('fr-FR').replace(/\s/g, ' ')} Ar`, 14, 38);
+    doc.text(`Total Virements: ${totalVirementFiltered.toLocaleString('fr-FR').replace(/\s/g, ' ')} Ar`, 14, 42);
+    doc.text(`Total Reste: ${totalResteFiltered.toLocaleString('fr-FR').replace(/\s/g, ' ')} Ar`, 14, 46);
+    
+    // Add filter info if a supplier is selected
+    if (selectedFournisseur) {
+      const selectedFournisseurData = fournisseurs.find(f => String(f.id) === selectedFournisseur);
+      if (selectedFournisseurData) {
+        doc.text(`Fournisseur: ${selectedFournisseurData.code} - ${selectedFournisseurData.nom}`, 14, 50);
+      }
+    }
+    
+    // Prepare table data
+    const tableData = transactionsToDisplay.map(transaction => {
       return [
         new Date(transaction.date).toLocaleDateString('fr-FR'),
-        transaction.fournisseur.code,
-        transaction.fournisseur.nom,
-        transaction.achat.toString(),
-        transaction.virement.toString(),
-        transaction.reste.toString()
+        `${transaction.fournisseur.code} - ${transaction.fournisseur.nom}`,
+        transaction.description || '-',
+        transaction.achat.toLocaleString('fr-FR').replace(/\s/g, ' '),
+        transaction.virement.toLocaleString('fr-FR').replace(/\s/g, ' '),
+        transaction.reste.toLocaleString('fr-FR').replace(/\s/g, ' ')
       ];
     });
-    
-    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
+
+    // Add main table
+    autoTable(doc, {
+      startY: selectedFournisseur ? 55 : 50,
+      head: [['Date', 'Fournisseur', 'Description', 'Achat (Ar)', 'Virement (Ar)', 'Reste (Ar)']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: 255,
+        fontSize: 12,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 5,
+        overflow: 'linebreak',
+        halign: 'left'
+      },
+      columnStyles: {
+        0: { cellWidth: 25, halign: 'center' },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 35, halign: 'right' },
+        4: { cellWidth: 35, halign: 'right' },
+        5: { cellWidth: 35, halign: 'right' }
+      },
+      margin: { top: selectedFournisseur ? 55 : 50, left: 14, right: 14 },
+      pageBreak: 'auto',
+      showFoot: 'lastPage',
+      didDrawPage: function(data) {
+        // Add page number
+        doc.setFontSize(10);
+        doc.text(
+          `Page ${data.pageNumber} sur ${data.pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Save the PDF
     const fileName = selectedFournisseur 
-      ? `transactions-${fournisseurs.find(f => String(f.id) === selectedFournisseur)?.code}-${new Date().toISOString().slice(0, 10)}.csv`
-      : `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.setAttribute('download', fileName);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      ? `transactions-${fournisseurs.find(f => String(f.id) === selectedFournisseur)?.code}-${new Date().toISOString().slice(0, 10)}.pdf`
+      : `transactions-${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
   };
 
   if (isLoading) {
@@ -406,11 +473,11 @@ export default function Comptabilite() {
                   {transactionsToDisplay.length} total
                 </span>
                 <button
-                  onClick={exportToCSV}
+                  onClick={exportToPDF}
                   className="inline-flex items-center px-3 py-1 border border-gray-200 text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Exporter
+                  Exporter PDF
                 </button>
               </div>
               <div className="w-full sm:w-64">

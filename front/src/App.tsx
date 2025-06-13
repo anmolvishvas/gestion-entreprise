@@ -13,6 +13,7 @@ import StockList from './pages/StockList';
 import ItemTypes from './pages/ItemTypes';
 import StockMovements from './pages/StockMovements';
 import Dashboard from './pages/Dashboard';
+import PrixPage from './pages/Prix';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="fournisseurs" element={<Fournisseurs />} />
         <Route path="inventaire" element={<Inventaire />} />
         <Route path="comptabilite" element={<Comptabilite />} />
+        <Route path="prix" element={<PrixPage />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="stock">
           <Route index element={<Stock />} />
