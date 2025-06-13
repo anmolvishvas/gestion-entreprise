@@ -1,5 +1,7 @@
 import api, { API_URL } from "./api";
 import { authService } from "./authService";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export interface Prix {
   id: number;
@@ -132,6 +134,73 @@ class PrixService {
       console.error('Erreur dans search:', error);
       throw error;
     }
+  }
+
+  async exportToPDF(prix: Prix[], searchTerm?: string) {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Add title
+    doc.setFontSize(20);
+    doc.text('Liste des Prix', 14, 20);
+
+    // Add date
+    doc.setFontSize(10);
+    const date = new Date().toLocaleDateString('fr-FR');
+    doc.text(`Date: ${date}`, 14, 30);
+
+    // Add search term if present
+    if (searchTerm) {
+      doc.text(`Recherche: "${searchTerm}"`, 14, 35);
+    }
+
+    // Add table
+    autoTable(doc, {
+      startY: searchTerm ? 40 : 35,
+      head: [['Article', 'Référence', 'Prix Unitaire', 'Prix Paquet Détail', 'Prix Paquet Gros', 'Prix Carton']],
+      body: prix.map(p => [
+        p.nomArticle,
+        p.reference || '-',
+        `${p.prixUnitaire} Ar`,
+        p.prixPaquetDetail ? `${p.prixPaquetDetail} Ar` : '-',
+        p.prixPaquetGros ? `${p.prixPaquetGros} Ar` : '-',
+        p.prixCarton ? `${p.prixCarton} Ar` : '-'
+      ]),
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 25, halign: 'right' },
+        3: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 },
+      didDrawPage: function(data) {
+        // Add page number
+        doc.setFontSize(8);
+        doc.text(
+          `Page ${data.pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Save the PDF
+    doc.save(`prix_${date.replace(/\//g, '-')}.pdf`);
   }
 }
 

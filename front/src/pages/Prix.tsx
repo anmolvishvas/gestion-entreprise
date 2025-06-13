@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Download } from 'lucide-react';
 import Modal from '../components/Modal';
 import { prixService, Prix, PrixFormData } from '../services/prixService';
 
@@ -152,6 +152,8 @@ export default function PrixPage() {
   const [selectedPrix, setSelectedPrix] = useState<Prix | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
 
   useEffect(() => {
     fetchPrix();
@@ -201,6 +203,7 @@ export default function PrixPage() {
 
   const handleSearch = async (query: string) => {
     setSearchTerm(query);
+    setCurrentPage(1);
     if (query.trim()) {
       try {
         const results = await prixService.search(query);
@@ -212,6 +215,15 @@ export default function PrixPage() {
       fetchPrix();
     }
   };
+
+  const handleExportPDF = () => {
+    prixService.exportToPDF(prix, searchTerm);
+  };
+
+  const totalPages = Math.ceil(prix.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPrix = prix.slice(startIndex, endIndex);
 
   if (isLoading) {
     return (
@@ -239,16 +251,25 @@ export default function PrixPage() {
                 Gérez les prix de vos articles et produits
               </p>
             </div>
-            <button
-              onClick={() => {
-                setSelectedPrix(null);
-                setIsModalOpen(true);
-              }}
-              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Nouveau Prix
-            </button>
+            <div className="mt-4 sm:mt-0 flex space-x-3">
+              <button
+                onClick={handleExportPDF}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+              >
+                <Download className="h-5 w-5 mr-2" />
+                Exporter PDF
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedPrix(null);
+                  setIsModalOpen(true);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Nouveau Prix
+              </button>
+            </div>
           </div>
         </div>
 
@@ -271,7 +292,8 @@ export default function PrixPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            {/* Desktop View */}
+            <table className="w-full hidden md:table">
               <thead>
                 <tr className="bg-gray-50">
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -298,7 +320,7 @@ export default function PrixPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {prix.map((p) => (
+                {currentPrix.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {p.nomArticle}
@@ -347,7 +369,116 @@ export default function PrixPage() {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile View */}
+            <div className="md:hidden">
+              {currentPrix.map((p) => (
+                <div key={p.id} className="p-4 border-b border-gray-100">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">{p.nomArticle}</h3>
+                      {p.reference && (
+                        <p className="text-sm text-gray-500">Réf: {p.reference}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(p)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">Prix Unitaire:</span>
+                      <span className="ml-2 text-gray-900">{p.prixUnitaire} Ar</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Paquet Détail:</span>
+                      <span className="ml-2 text-gray-900">{p.prixPaquetDetail} Ar</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Paquet Gros:</span>
+                      <span className="ml-2 text-gray-900">{p.prixPaquetGros} Ar</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Carton:</span>
+                      <span className="ml-2 text-gray-900">{p.prixCarton} Ar</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {prix.length === 0 && (
+                <div className="px-6 py-8 text-center">
+                  <div className="flex flex-col items-center">
+                    <Search className="h-12 w-12 text-gray-400" />
+                    <p className="mt-2 text-gray-500">Aucun prix trouvé</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Pagination - Mobile Optimized */}
+          {totalPages > 1 && (
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                <div className="text-sm text-gray-500 text-center sm:text-left">
+                  Affichage de {startIndex + 1} à {Math.min(endIndex, prix.length)} sur {prix.length} prix
+                </div>
+                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === 1
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Précédent
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === totalPages
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Suivant
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          currentPage === page
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
