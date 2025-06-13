@@ -477,22 +477,26 @@ export default function StockMovements() {
                     {movement.type === 'entree' ? 'Entrée' : 'Sortie'}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Date:</span>
-                    <span className="ml-2 text-gray-900">{formatDate(movement.date)}</span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Référence</span>
+                    <span className="text-gray-900">{movement.movementType === 'color' ? movement.colorStock.stockItem.reference || '-' : getCompleteStockItem(movement.stockItem)?.reference || '-'}</span>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Quantité:</span>
-                    <span className={`ml-2 font-medium ${
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Date</span>
+                    <span className="text-gray-900">{formatDate(movement.date)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Quantité</span>
+                    <span className={`font-medium ${
                       movement.type === 'entree' ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {movement.type === 'entree' ? '+' : '-'}{movement.quantity}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Stock Restant:</span>
-                    <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Stock Restant</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       movement.movementType === 'color' 
                         ? movement.colorStock.stockRestant <= 10
                           ? 'bg-red-100 text-red-800'
@@ -511,9 +515,9 @@ export default function StockMovements() {
                     </span>
                   </div>
                   {movement.notes && (
-                    <div className="col-span-2 mt-2">
-                      <span className="text-gray-500">Notes:</span>
-                      <span className="ml-2 text-gray-900">{movement.notes}</span>
+                    <div className="flex justify-between items-start">
+                      <span className="text-gray-500">Notes</span>
+                      <span className="text-gray-900 ml-4 text-right">{movement.notes}</span>
                     </div>
                   )}
                 </div>

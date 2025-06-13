@@ -334,7 +334,7 @@ export default function Fournisseurs() {
             </div>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full hidden md:table">
                 <thead>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-y border-gray-100">
@@ -410,11 +410,66 @@ export default function Fournisseurs() {
                   )}
                 </tbody>
               </table>
+
+              {/* Mobile View */}
+              <div className="md:hidden">
+                {paginatedFournisseurs.map((fournisseur) => {
+                  const { totalAchat, totalReste } = getFournisseurStats(fournisseur.transactions);
+                  
+                  return (
+                    <div key={fournisseur.id} className="p-4 border-b border-gray-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3">
+                            <Users className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">{fournisseur.nom}</h3>
+                            <span className="text-xs text-gray-500">{fournisseur.code}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Total Achats</span>
+                          <span className="text-sm font-medium text-gray-900">{totalAchat.toLocaleString('fr-FR')} Ar</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Reste à Payer</span>
+                          <span className={`text-sm font-medium ${
+                            totalReste > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {totalReste.toLocaleString('fr-FR')} Ar
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {filteredFournisseurs.length === 0 && (
+                  <div className="px-6 py-8 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                        <Users className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-500 font-medium">
+                        {searchTerm ? 'Aucun fournisseur trouvé' : 'Aucun fournisseur ajouté'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {searchTerm ? 'Essayez avec un autre terme' : 'Commencez par ajouter un fournisseur'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+            <div className="px-6 py-4 border-t border-gray-100">
+              {/* Desktop Pagination */}
+              <div className="hidden md:flex items-center justify-between bg-gray-50">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -428,7 +483,7 @@ export default function Fournisseurs() {
                   Précédent
                 </button>
                 
-              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
@@ -457,6 +512,67 @@ export default function Fournisseurs() {
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </button>
               </div>
+
+              {/* Mobile Pagination */}
+              <div className="md:hidden">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {currentPage} / {totalPages}
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className={`p-2 text-sm font-medium rounded-md ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      «
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`p-2 text-sm font-medium rounded-md ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-md"
+                    >
+                      {currentPage}
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`p-2 text-sm font-medium rounded-md ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      ›
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className={`p-2 text-sm font-medium rounded-md ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

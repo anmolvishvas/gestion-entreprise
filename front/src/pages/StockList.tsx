@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Package, Search, Filter, ArrowDown, ArrowUp, Download, 
-  Plus, X, Edit, ArrowLeft, Check, Tags, Palette 
+  Plus, X, Edit, ArrowLeft, Check, Tags, Palette, Edit2, Trash2 
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import type { StockItem } from '../services/stockItemService';
@@ -694,50 +694,226 @@ export default function StockList() {
         {/* Mobile view */}
         <div className="md:hidden">
           {paginatedItems.map((item) => (
-            <div key={item.id} className="p-4 border-b border-gray-200">
+            <div key={item.id} className="p-4 border-b border-gray-100">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="font-medium text-gray-900">{item.name}</h3>
-                  {item.reference && (
-                    <p className="text-sm text-gray-500">Réf: {item.reference}</p>
-                  )}
-                  <p className="text-sm text-gray-600">{typeof item.type === 'object' ? item.type.name : ''}</p>
+                  <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                  <p className="text-sm text-gray-500">Type: {getTypeName(typeof item.type === 'object' ? item.type.name : '')}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  (item.stockRestant ?? 0) <= 10
-                    ? 'bg-red-100 text-red-800'
-                    : (item.stockRestant ?? 0) <= 30
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  {(item.stockRestant ?? 0) <= 10
-                    ? 'Critique'
-                    : (item.stockRestant ?? 0) <= 30
-                    ? 'Bas'
-                    : 'Normal'}
-                </span>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleItemSelect(item)}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Emplacement:</span>
-                  <span className="ml-1 text-gray-900">{getLocationName(item.location)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Référence</span>
+                  <span className="text-gray-900">{item.reference || '-'}</span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Quantité:</span>
-                  {item.hasColors ? (
-                    <button
-                      onClick={() => setSelectedItemForColors(item)}
-                      className="ml-1 text-blue-600 hover:text-blue-800 underline text-sm"
-                    >
-                      Voir les couleurs
-                    </button>
-                  ) : (
-                    <span className="ml-1 text-gray-900">{item.stockRestant ?? 0} {item.unit}</span>
-                  )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Quantité</span>
+                  <span className="text-gray-900">{item.stockRestant || item.stockInitial} {item.unit}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Emplacement</span>
+                  <span className="text-gray-900">{getLocationName(item.location)}</span>
+                </div>
+                {item.description && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Description</span>
+                    <span className="text-gray-900 ml-2 text-right">{item.description}</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
+          
+          {filteredItems.length === 0 && (
+            <div className="px-6 py-8 text-center">
+              <div className="flex flex-col items-center">
+                <Package className="h-12 w-12 text-gray-400" />
+                <p className="mt-2 text-gray-500">Aucun article trouvé</p>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-100 hidden md:block">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredItems.length)} sur {filteredItems.length} articles
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Première
+                  </button>
+                  
+                  {/* Pages */}
+                  <div className="flex items-center space-x-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5;
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                      
+                      if (endPage - startPage + 1 < maxVisiblePages) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                      }
+                      
+                      if (startPage > 1) {
+                        pages.push(
+                          <button
+                            key="1"
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => setCurrentPage(1)}
+                          >
+                            1
+                          </button>
+                        );
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="start-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            className={`px-3 py-1.5 rounded-md ${
+                              currentPage === i
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
+                            onClick={() => setCurrentPage(i)}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="end-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                        pages.push(
+                          <button
+                            key={totalPages}
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => setCurrentPage(totalPages)}
+                          >
+                            {totalPages}
+                          </button>
+                        );
+                      }
+                      
+                      return pages;
+                    })()}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Dernière
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 md:hidden">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {currentPage} / {totalPages}
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md"
+                  >
+                    {currentPage}
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         {/* Desktop view */}
         <div className="hidden md:block overflow-x-auto">
@@ -836,122 +1012,114 @@ export default function StockList() {
             </tbody>
           </table>
         </div>
+
+        {/* Desktop Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 hidden md:block">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredItems.length)} sur {filteredItems.length} articles
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Première
+                </button>
+                
+                {/* Pages */}
+                <div className="flex items-center space-x-1">
+                  {(() => {
+                    const pages = [];
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    
+                    if (endPage - startPage + 1 < maxVisiblePages) {
+                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+                    
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key="1"
+                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                          onClick={() => setCurrentPage(1)}
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <span key="start-ellipsis" className="px-2 text-gray-500">
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`px-3 py-1.5 rounded-md ${
+                            currentPage === i
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setCurrentPage(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <span key="end-ellipsis" className="px-2 text-gray-500">
+                            ...
+                          </span>
+                        );
+                      }
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                          onClick={() => setCurrentPage(totalPages)}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+                    
+                    return pages;
+                  })()}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Dernière
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredItems.length)} sur {filteredItems.length} articles
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Première
-            </button>
-            
-            <button 
-              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            
-            {/* Pages */}
-            <div className="flex items-center space-x-1">
-              {(() => {
-                const pages = [];
-                const maxVisiblePages = 5;
-                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                
-                if (endPage - startPage + 1 < maxVisiblePages) {
-                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                }
-                
-                if (startPage > 1) {
-                  pages.push(
-                    <button
-                      key="1"
-                      className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                      onClick={() => setCurrentPage(1)}
-                    >
-                      1
-                    </button>
-                  );
-                  if (startPage > 2) {
-                    pages.push(
-                      <span key="start-ellipsis" className="px-2 text-gray-500">
-                        ...
-                      </span>
-                    );
-                  }
-                }
-                
-                for (let i = startPage; i <= endPage; i++) {
-                  pages.push(
-                    <button
-                      key={i}
-                      className={`px-3 py-1.5 rounded-lg ${
-                        currentPage === i
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                      onClick={() => setCurrentPage(i)}
-                    >
-                      {i}
-                    </button>
-                  );
-                }
-                
-                if (endPage < totalPages) {
-                  if (endPage < totalPages - 1) {
-                    pages.push(
-                      <span key="end-ellipsis" className="px-2 text-gray-500">
-                        ...
-                      </span>
-                    );
-                  }
-                  pages.push(
-                    <button
-                      key={totalPages}
-                      className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                      onClick={() => setCurrentPage(totalPages)}
-                    >
-                      {totalPages}
-                    </button>
-                  );
-                }
-                
-                return pages;
-              })()}
-            </div>
-            
-            <button 
-              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              <ArrowLeft className="h-4 w-4 transform rotate-180" />
-            </button>
-            
-            <button 
-              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-            >
-              Dernière
-              <ArrowLeft className="h-4 w-4 ml-1 transform rotate-180" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* New Item Modal */}
       {isNewItemModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

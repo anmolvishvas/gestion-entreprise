@@ -511,7 +511,7 @@ export default function Comptabilite() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full hidden md:table">
               <thead>
                 <tr className="bg-gray-50">
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -589,36 +589,221 @@ export default function Comptabilite() {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile View */}
+            <div className="md:hidden">
+              {paginatedTransactions.map((transaction) => (
+                <div key={transaction.id} className="p-4 border-b border-gray-100">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {new Date(transaction.date).toLocaleDateString('fr-FR')}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {transaction.fournisseur.code} - {transaction.fournisseur.nom}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Achat</span>
+                      <span className="text-gray-900">{transaction.achat.toLocaleString('fr-FR')} Ar</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Virement</span>
+                      <span className="text-gray-900">{transaction.virement.toLocaleString('fr-FR')} Ar</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Reste</span>
+                      <span className={`font-medium ${
+                        transaction.reste > 0 ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {transaction.reste.toLocaleString('fr-FR')} Ar
+                      </span>
+                    </div>
+                    {transaction.description && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Description</span>
+                        <span className="text-gray-900 text-right ml-2">{transaction.description}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {paginatedTransactions.length === 0 && (
+                <div className="px-6 py-8 text-center">
+                  <div className="flex flex-col items-center">
+                    <FileText className="h-12 w-12 text-gray-400" />
+                    <p className="mt-2 text-gray-500">Aucune transaction trouvée</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Desktop Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-100">
+            <div className="px-6 py-4 border-t border-gray-100 hidden md:block">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  Page {currentPage} sur {totalPages}
+                <div className="text-sm text-gray-600">
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, transactionsToDisplay.length)} sur {transactionsToDisplay.length} transactions
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => handlePageChange(currentPage - 1)}
+                    onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
                       currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    Précédent
+                    Première
                   </button>
+                  
+                  {/* Pages */}
+                  <div className="flex items-center space-x-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5;
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                      
+                      if (endPage - startPage + 1 < maxVisiblePages) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                      }
+                      
+                      if (startPage > 1) {
+                        pages.push(
+                          <button
+                            key="1"
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => handlePageChange(1)}
+                          >
+                            1
+                          </button>
+                        );
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="start-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            className={`px-3 py-1.5 rounded-md ${
+                              currentPage === i
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
+                            onClick={() => handlePageChange(i)}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="end-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                        pages.push(
+                          <button
+                            key={totalPages}
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => handlePageChange(totalPages)}
+                          >
+                            {totalPages}
+                          </button>
+                        );
+                      }
+                      
+                      return pages;
+                    })()}
+                  </div>
+                  
                   <button
-                    onClick={() => handlePageChange(currentPage + 1)}
+                    onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
                       currentPage === totalPages
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    Suivant
+                    Dernière
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 md:hidden">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {currentPage} / {totalPages}
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md"
+                  >
+                    {currentPage}
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    »
                   </button>
                 </div>
               </div>

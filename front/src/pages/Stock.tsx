@@ -178,8 +178,15 @@ export default function Stock() {
                 const currentStock = item.stockRestant ?? 0;
                 return (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="font-medium">{item.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <span className="font-medium truncate">{item.name}</span>
+                      </div>
+                      <div className="mt-1 flex items-center text-xs text-gray-500">
+                        <span className="truncate">{item.reference}</span>
+                      </div>
+                    </div>
+                    <span className={`ml-4 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                       currentStock <= 10
                         ? 'bg-red-100 text-red-800'
                         : currentStock <= 30
@@ -222,8 +229,15 @@ export default function Stock() {
                 const currentStock = item.stockRestant ?? 0;
                 return (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="font-medium">{item.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <span className="font-medium truncate">{item.name}</span>
+                      </div>
+                      <div className="mt-1 flex items-center text-xs text-gray-500">
+                        <span className="truncate">{item.reference}</span>
+                      </div>
+                    </div>
+                    <span className={`ml-4 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                       currentStock <= 10
                         ? 'bg-red-100 text-red-800'
                         : currentStock <= 30
@@ -266,8 +280,15 @@ export default function Stock() {
                 const currentStock = item.stockRestant ?? 0;
                 return (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="font-medium">{item.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <span className="font-medium truncate">{item.name}</span>
+                      </div>
+                      <div className="mt-1 flex items-center text-xs text-gray-500">
+                        <span className="truncate">{item.reference}</span>
+                      </div>
+                    </div>
+                    <span className={`ml-4 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                       currentStock <= 10
                         ? 'bg-red-100 text-red-800'
                         : currentStock <= 30
@@ -310,8 +331,15 @@ export default function Stock() {
                 const currentStock = item.stockRestant ?? 0;
                 return (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="font-medium">{item.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <span className="font-medium truncate">{item.name}</span>
+                      </div>
+                      <div className="mt-1 flex items-center text-xs text-gray-500">
+                        <span className="truncate">{item.reference}</span>
+                      </div>
+                    </div>
+                    <span className={`ml-4 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                       currentStock <= 10
                         ? 'bg-red-100 text-red-800'
                         : currentStock <= 30

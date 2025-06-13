@@ -517,35 +517,35 @@ export default function PrixPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="space-y-2 text-sm">
                     {selectedType === 'fourniture' ? (
                       <>
-                        <div>
-                          <span className="text-gray-500">Prix Unitaire:</span>
-                          <span className="ml-2 text-gray-900">{p.prixUnitaire} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Prix Unitaire</span>
+                          <span className="text-gray-900">{p.prixUnitaire} Ar</span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Paquet Détail:</span>
-                          <span className="ml-2 text-gray-900">{p.prixPaquetDetail} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Paquet Détail</span>
+                          <span className="text-gray-900">{p.prixPaquetDetail} Ar</span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Paquet Gros:</span>
-                          <span className="ml-2 text-gray-900">{p.prixPaquetGros} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Paquet Gros</span>
+                          <span className="text-gray-900">{p.prixPaquetGros} Ar</span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Carton:</span>
-                          <span className="ml-2 text-gray-900">{p.prixCarton} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Carton</span>
+                          <span className="text-gray-900">{p.prixCarton} Ar</span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div>
-                          <span className="text-gray-500">Prix Affiché:</span>
-                          <span className="ml-2 text-gray-900">{p.prixAfficher} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Prix Affiché</span>
+                          <span className="text-gray-900">{p.prixAfficher} Ar</span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Dernier Prix:</span>
-                          <span className="ml-2 text-gray-900">{p.dernierPrix} Ar</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Dernier Prix</span>
+                          <span className="text-gray-900">{p.dernierPrix} Ar</span>
                         </div>
                       </>
                     )}
@@ -561,119 +561,230 @@ export default function PrixPage() {
                   </div>
                 </div>
               )}
+
+              {/* Mobile Pagination */}
+              {totalPages > 1 && (
+                <div className="p-4 border-t border-gray-100">
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-sm text-gray-600 text-center">
+                      {currentPage} / {totalPages}
+                    </div>
+                    <div className="flex justify-center space-x-1">
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className={`p-2 text-sm font-medium rounded-md ${
+                          currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        «
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className={`p-2 text-sm font-medium rounded-md ${
+                          currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className={`p-2 text-sm font-medium rounded-md ${
+                          currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        ›
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`p-2 text-sm font-medium rounded-md ${
+                          currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        »
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Pagination */}
+          {/* Desktop Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredPrix.length)} sur {filteredPrix.length} prix
-              </div>
-              <div className="flex items-center space-x-2">
-                <button 
-                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Première
-                </button>
-                
-                <button 
-                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                
-                {/* Pages */}
-                <div className="flex items-center space-x-1">
-                  {(() => {
-                    const pages = [];
-                    const maxVisiblePages = 5;
-                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                    
-                    if (endPage - startPage + 1 < maxVisiblePages) {
-                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                    }
-                    
-                    if (startPage > 1) {
-                      pages.push(
-                        <button
-                          key="1"
-                          className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                          onClick={() => setCurrentPage(1)}
-                        >
-                          1
-                        </button>
-                      );
-                      if (startPage > 2) {
-                        pages.push(
-                          <span key="start-ellipsis" className="px-2 text-gray-500">
-                            ...
-                          </span>
-                        );
-                      }
-                    }
-                    
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <button
-                          key={i}
-                          className={`px-3 py-1.5 rounded-lg ${
-                            currentPage === i
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
-                          onClick={() => setCurrentPage(i)}
-                        >
-                          {i}
-                        </button>
-                      );
-                    }
-                    
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
-                        pages.push(
-                          <span key="end-ellipsis" className="px-2 text-gray-500">
-                            ...
-                          </span>
-                        );
-                      }
-                      pages.push(
-                        <button
-                          key={totalPages}
-                          className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                          onClick={() => setCurrentPage(totalPages)}
-                        >
-                          {totalPages}
-                        </button>
-                      );
-                    }
-                    
-                    return pages;
-                  })()}
+            <div className="px-6 py-4 border-t border-gray-100 hidden md:block">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredPrix.length)} sur {filteredPrix.length} prix
                 </div>
-                
-                <button 
-                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ArrowLeft className="h-4 w-4 transform rotate-180" />
-                </button>
-                
-                <button 
-                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  Dernière
-                  <ArrowLeft className="h-4 w-4 ml-1 transform rotate-180" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Première
+                  </button>
+                  
+                  {/* Pages */}
+                  <div className="flex items-center space-x-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5;
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                      
+                      if (endPage - startPage + 1 < maxVisiblePages) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                      }
+                      
+                      if (startPage > 1) {
+                        pages.push(
+                          <button
+                            key="1"
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => setCurrentPage(1)}
+                          >
+                            1
+                          </button>
+                        );
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="start-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            className={`px-3 py-1.5 rounded-md ${
+                              currentPage === i
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
+                            onClick={() => setCurrentPage(i)}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="end-ellipsis" className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+                        pages.push(
+                          <button
+                            key={totalPages}
+                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
+                            onClick={() => setCurrentPage(totalPages)}
+                          >
+                            {totalPages}
+                          </button>
+                        );
+                      }
+                      
+                      return pages;
+                    })()}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Dernière
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 md:hidden">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {currentPage} / {totalPages}
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md"
+                  >
+                    {currentPage}
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    »
+                  </button>
+                </div>
               </div>
             </div>
           )}
