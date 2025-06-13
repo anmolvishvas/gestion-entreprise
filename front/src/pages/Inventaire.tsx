@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Edit, Search, TrendingUp, AlertTriangle, Boxes, Palette } from 'lucide-react';
+import { Package, Edit, Search, TrendingUp, AlertTriangle, Boxes, Palette, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import type { StockItem, ColorStock } from '../services/stockItemService';
 import { itemTypeService, type ItemType } from '../services/itemTypeService';
@@ -47,6 +47,10 @@ export default function Inventaire() {
   // For error feedback
   const [updateError, setUpdateError] = useState<string | null>(null);
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Filter items based on search and filters
   const filteredItems = stockItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -64,6 +68,18 @@ export default function Inventaire() {
   const totalItems = stockItems.length;
   const lowStockCount = stockItems.filter(item => (item.stockRestant || 0) <= 10).length;
   const totalStock = stockItems.reduce((sum, item) => sum + (item.stockRestant || 0), 0);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, locationFilter, typeFilter]);
   
   // Handle adding new item
   const handleAddItem = (e: React.FormEvent) => {
@@ -480,7 +496,7 @@ export default function Inventaire() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredItems.map((item: StockItem) => {
+                {paginatedItems.map((item: StockItem) => {
                   const mainRow = (
                     <tr key={`${item.id}-main`} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -614,7 +630,7 @@ export default function Inventaire() {
           {/* Mobile Card View */}
           <div className="md:hidden">
             <div className="divide-y divide-gray-200">
-              {filteredItems.map((item: StockItem) => (
+              {paginatedItems.map((item: StockItem) => (
                 <div key={item.id} className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -737,7 +753,7 @@ export default function Inventaire() {
                 </div>
               ))}
 
-              {filteredItems.length === 0 && (
+              {paginatedItems.length === 0 && (
                 <div className="px-4 py-10 text-center text-sm text-gray-500">
                   <div className="flex flex-col items-center">
                     <Package className="h-10 w-10 text-gray-400 mb-2" />
@@ -772,6 +788,120 @@ export default function Inventaire() {
             </div>
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredItems.length)} sur {filteredItems.length} articles
+            </div>
+            <div className="flex items-center space-x-2">
+              <button 
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Première
+              </button>
+              
+              <button 
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              
+              {/* Pages */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const maxVisiblePages = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                  
+                  if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                  }
+                  
+                  if (startPage > 1) {
+                    pages.push(
+                      <button
+                        key="1"
+                        className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                        onClick={() => setCurrentPage(1)}
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pages.push(
+                        <span key="start-ellipsis" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+                  
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        className={`px-3 py-1.5 rounded-lg ${
+                          currentPage === i
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setCurrentPage(i)}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+                  
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <span key="end-ellipsis" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                        onClick={() => setCurrentPage(totalPages)}
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+                  
+                  return pages;
+                })()}
+              </div>
+              
+              <button 
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                <ArrowLeft className="h-4 w-4 transform rotate-180" />
+              </button>
+              
+              <button 
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                Dernière
+                <ArrowLeft className="h-4 w-4 ml-1 transform rotate-180" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

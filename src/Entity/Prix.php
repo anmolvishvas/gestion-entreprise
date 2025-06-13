@@ -53,21 +53,33 @@ class Prix
     #[Groups(['prix:read', 'prix:write'])]
     private ?string $reference = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 100)]
+    #[Groups(['prix:read', 'prix:write'])]
+    private string $type;
+
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['prix:read', 'prix:write'])]
     private ?string $prixUnitaire = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['prix:read', 'prix:write'])]
     private ?string $prixPaquetDetail = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['prix:read', 'prix:write'])]
     private ?string $prixPaquetGros = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['prix:read', 'prix:write'])]
     private ?string $prixCarton = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['prix:read', 'prix:write'])]
+    private ?string $prixAfficher = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['prix:read', 'prix:write'])]
+    private ?string $dernierPrix = null;
 
     public function getId(): ?int
     {
@@ -93,6 +105,17 @@ class Prix
     public function setReference(string $reference): static
     {
         $this->reference = $reference;
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
         return $this;
     }
 
@@ -134,9 +157,31 @@ class Prix
         return $this->prixCarton;
     }
 
-    public function setPrixCarton(string $prixCarton): static
+    public function setPrixCarton(?string $prixCarton): static
     {
         $this->prixCarton = $prixCarton;
+        return $this;
+    }
+
+    public function getPrixAfficher(): ?string
+    {
+        return $this->prixAfficher;
+    }
+
+    public function setPrixAfficher(?string $prixAfficher): static
+    {
+        $this->prixAfficher = $prixAfficher;
+        return $this;
+    }
+
+    public function getDernierPrix(): ?string
+    {
+        return $this->dernierPrix;
+    }
+
+    public function setDernierPrix(?string $dernierPrix): static
+    {
+        $this->dernierPrix = $dernierPrix;
         return $this;
     }
 } 

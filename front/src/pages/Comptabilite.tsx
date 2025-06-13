@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, FileText, Download, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Plus, FileText, Download, TrendingUp, TrendingDown, DollarSign, ArrowUpDown } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Transaction } from '../context/AppContext';
 import Modal from '../components/Modal';
@@ -202,6 +202,7 @@ export default function Comptabilite() {
   const [selectedFournisseur, setSelectedFournisseur] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const itemsPerPage = 20;
 
   // Fonction pour calculer le reste pour un fournisseur spécifique jusqu'à une transaction donnée
@@ -270,10 +271,12 @@ export default function Comptabilite() {
       ? transactions.filter(t => String(t.fournisseur.id) === selectedFournisseur)
       : transactions;
 
-    // Trier par date
-    displayTransactions = [...displayTransactions].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    // Trier par date selon l'ordre choisi
+    displayTransactions = [...displayTransactions].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
 
     // Calculer le reste cumulatif pour chaque transaction
     return displayTransactions.map(transaction => ({
@@ -382,7 +385,7 @@ export default function Comptabilite() {
         // Add page number
         doc.setFontSize(10);
         doc.text(
-          `Page ${data.pageNumber} sur ${data.pageCount}`,
+          `Page ${data.pageNumber} sur ${doc.internal.getNumberOfPages()}`,
           data.settings.margin.left,
           doc.internal.pageSize.height - 10
         );
@@ -478,6 +481,13 @@ export default function Comptabilite() {
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Exporter PDF
+                </button>
+                <button
+                  onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                  className="inline-flex items-center px-3 py-1 border border-gray-200 text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                >
+                  <ArrowUpDown className="h-4 w-4 mr-1" />
+                  {sortOrder === 'desc' ? 'Plus récent → Plus ancien' : 'Plus ancien → Plus récent'}
                 </button>
               </div>
               <div className="w-full sm:w-64">
